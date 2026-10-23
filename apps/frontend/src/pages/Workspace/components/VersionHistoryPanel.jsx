@@ -150,7 +150,7 @@ export default function VersionHistoryPanel({ automationId, isOpen, onClose }) {
             </div>
 
             <div className="px-5 py-3 border-t border-zinc-800/80">
-              <p className="text-[10px] text-zinc-700">Versions are auto-saved on each save. Up to 50 kept.</p>
+              <p className="text-[10px] text-zinc-700">Versions are auto-saved on each save. Last 10 kept.</p>
             </div>
           </motion.aside>
         </>

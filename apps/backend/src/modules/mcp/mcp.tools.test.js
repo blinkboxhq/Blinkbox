@@ -180,3 +180,16 @@ test("create_automation threads answered brief state back to the builder", async
   assert.equal(messages.at(-2).role, "assistant");
   assert.equal(messages.at(-1).content, "Memory: none");
 });
+
+test("blinkbox_api forwards a body that arrived as a JSON string", async () => {
+  const requests = [];
+  const api = { request: async (req) => { requests.push(req); return { status: 200, data: { success: true } }; } };
+  await call("blinkbox_api", { method: "PATCH", path: "/automation/abc/rename", body: '{"name":"Renamed"}' }, api);
+  assert.equal(requests.length, 1);
+  assert.deepEqual(requests[0].data, { name: "Renamed" }, "the string body is parsed, not dropped");
+
+  await assert.rejects(
+    () => call("blinkbox_api", { method: "POST", path: "/automation", body: "not json" }, api),
+    /body must be a JSON object/,
+  );
+});

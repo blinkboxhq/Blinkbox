@@ -199,6 +199,23 @@ export const SLACK_WEBHOOK_URL  = process.env.SLACK_WEBHOOK_URL  || null;
 export const ENABLE_SHELL_TOOLS    = process.env.ENABLE_SHELL_TOOLS    === "true";
 export const ALLOW_LOCAL_REQUESTS  = process.env.ALLOW_LOCAL_REQUESTS  === "true";
 
+// ── Personal instance ─────────────────────────────────────────────────────────
+// Sign-ups are closed; existing accounts can still log in. Turn on only long
+// enough to create an account, then turn it back off.
+export const ALLOW_SIGNUPS         = process.env.ALLOW_SIGNUPS         === "true";
+
+// Schedules saved without a timezone run in this one (IANA name, e.g.
+// "Asia/Kolkata"). The cron worker otherwise falls back to UTC.
+export const DEFAULT_TIMEZONE      = process.env.DEFAULT_TIMEZONE      || "UTC";
+
+// ── Computer (Linux service on the Railway private network) ───────────────────
+// Terminal, script and file nodes run on this separate box, never inside the
+// API process. Only the owner account (admin / isOwner) or a workspace id listed
+// in COMPUTER_ALLOWED_WORKSPACES (comma-separated) may drive it.
+export const COMPUTER_URL                = process.env.COMPUTER_URL                || null;
+export const COMPUTER_TOKEN              = process.env.COMPUTER_TOKEN              || null;
+export const COMPUTER_ALLOWED_WORKSPACES = process.env.COMPUTER_ALLOWED_WORKSPACES || null;
+
 // ── Self-hosted deployments ───────────────────────────────────────────────────
 // A self-hosted container runs the app + its own local Mongo/Redis, but credits
 // and billing stay authoritative on the central Blinkbox cloud API — the license
@@ -274,3 +291,13 @@ export const GRACE_HOURS = Math.min(Math.max(Number(process.env.GRACE_HOURS) || 
 export const SELF_HOST_DOMAIN     = process.env.SELF_HOST_DOMAIN     || "blinkbox.net";
 export const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN || null;
 export const CLOUDFLARE_ZONE_ID   = process.env.CLOUDFLARE_ZONE_ID   || null;
+
+// Storage retention (see infra/storage.retention.js). Successful runs drop node
+// inputs/outputs first since they are rarely inspected; failed runs keep theirs
+// long enough to debug and retry. Run summaries outlive both for analytics.
+const clampNum = (v, def, min, max) => Math.min(Math.max(Number(v) || def, min), max);
+export const EXECUTION_DATA_SUCCESS_HOURS = clampNum(process.env.EXECUTION_DATA_SUCCESS_HOURS, 24, 1, 24 * 30);
+export const EXECUTION_DATA_FAILED_DAYS   = clampNum(process.env.EXECUTION_DATA_FAILED_DAYS, 7, 1, 90);
+export const EXECUTION_RETENTION_DAYS     = clampNum(process.env.EXECUTION_RETENTION_DAYS, 90, 7, 3650);
+export const EXECUTION_MAX_PER_AUTOMATION = clampNum(process.env.EXECUTION_MAX_PER_AUTOMATION, 1000, 50, 100000);
+export const EXECUTION_LOG_RETENTION_DAYS = clampNum(process.env.EXECUTION_LOG_RETENTION_DAYS, 90, 7, 365);

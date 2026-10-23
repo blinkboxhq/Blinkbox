@@ -93,7 +93,7 @@ export default function Product() {
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors">Log in</a>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors px-3.5 py-1.5 rounded-lg">
-              Get started
+              Sign in
             </button>
           </a>
         </div>
@@ -143,7 +143,7 @@ export default function Product() {
           >
             <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
               <button className="flex items-center gap-2 text-[14px] font-semibold text-black bg-white hover:bg-neutral-200 transition-colors px-5 py-2.5 rounded-xl">
-                Start for free <ArrowRight className="w-4 h-4" />
+                Sign in <ArrowRight className="w-4 h-4" />
               </button>
             </a>
             <a href="/docs" className="text-[14px] text-neutral-400 hover:text-white transition-colors px-4 py-2.5">
@@ -227,7 +227,7 @@ export default function Product() {
           <p className="text-[15px] text-neutral-500 mb-8">Free forever on Starter. No credit card needed.</p>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[14px] font-semibold text-black bg-white hover:bg-neutral-200 transition-colors px-6 py-3 rounded-xl">
-              Start building for free
+              Sign in
             </button>
           </a>
         </motion.div>

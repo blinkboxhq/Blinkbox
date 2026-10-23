@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Copy, Check } from 'lucide-react';
 import { API_URL } from '@/lib/api';
@@ -60,6 +60,10 @@ function UrlDisplay({ field, config, accent, automationId }) {
 
 function Field({ field, config, set, accent, automationId }) {
   const v = (key, dflt) => (config[key] !== undefined ? config[key] : dflt);
+  const setWithEffects = (val) => {
+    set(field.key, val);
+    if (field.sideEffects) Object.entries(field.sideEffects(val, { ...config, [field.key]: val })).forEach(([k, x]) => set(k, x));
+  };
 
   switch (field.type) {
     case 'url-display':
@@ -95,10 +99,10 @@ function Field({ field, config, set, accent, automationId }) {
 
     case 'select':
       return <ConfigSelect label={field.label} icon={field.icon} value={v(field.key, field.default)} options={field.options} accentColor={accent}
-        onChange={(val) => { set(field.key, val); if (field.sideEffects) Object.entries(field.sideEffects(val)).forEach(([k, x]) => set(k, x)); }} />;
+        onChange={setWithEffects} />;
 
     case 'hour':
-      return <ConfigSelect label={field.label} value={v(field.key, field.default || '09')} options={HOURS} accentColor={accent} onChange={(val) => set(field.key, val)} />;
+      return <ConfigSelect label={field.label} value={v(field.key, field.default || '09')} options={HOURS} accentColor={accent} onChange={setWithEffects} />;
 
     case 'pills': {
       const cur = v(field.key, field.default ?? (field.multi ? [] : undefined));
@@ -123,7 +127,7 @@ function Field({ field, config, set, accent, automationId }) {
               const on = cur.includes(d);
               return (
                 <button key={d} type="button"
-                  onClick={() => set(field.key, on ? cur.filter((x) => x !== d) : [...cur, d])}
+                  onClick={() => setWithEffects(on ? cur.filter((x) => x !== d) : [...cur, d])}
                   className="bb-glow-border flex-1 py-2 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border transition-colors"
                   style={on ? { color: accent, backgroundColor: `${accent}1f`, borderColor: `${accent}66` } : { color: '#6d6d6d', backgroundColor: '#0f0f0f', borderColor: '#2b2b2b' }}>
                   {d[0]}
@@ -184,6 +188,20 @@ export default function MonoSchemaPanel({ schema, config = {}, updateConfig }) {
   const logoUrl = schema.logoUrl;
 
   const set = (key, val) => updateConfig?.(key, val);
+
+  // Schedules read these on the server; a default that only lives in the UI
+  // never reaches the cron worker, so write them into the node once.
+  useEffect(() => {
+    if (!schema.persistDefaults) return;
+    const merged = { ...config };
+    for (const f of schema.fields) {
+      if (f.key && f.default !== undefined && merged[f.key] === undefined) merged[f.key] = f.default;
+    }
+    for (const f of schema.fields) {
+      if (f.sideEffects) Object.assign(merged, f.sideEffects(merged[f.key], merged));
+    }
+    Object.entries(merged).forEach(([k, x]) => { if (config[k] !== x) set(k, x); });
+  }, [schema]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const visible = schema.fields.filter((f) => {
     if (!matchesShowWhen(f.showWhen, config)) return false;

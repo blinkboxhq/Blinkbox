@@ -53,8 +53,8 @@ const STEPS = [
 ];
 
 const TIERS = [
-  { name: 'Free', price: '$0', unit: 'forever', features: ['3 active workflows', '1,000 runs / month', 'All 251 integrations'], cta: 'Start free', featured: false },
-  { name: 'Pro', price: '$19', unit: '/ month', features: ['Unlimited workflows', '50,000 runs / month', 'Brian AI copilot'], cta: 'Start Pro trial', featured: true },
+  { name: 'Free', price: '$0', unit: 'forever', features: ['3 active workflows', '1,000 runs / month', 'All 251 integrations'], cta: 'Sign in', featured: false },
+  { name: 'Pro', price: '$19', unit: '/ month', features: ['Unlimited workflows', '50,000 runs / month', 'Brian AI copilot'], cta: 'Sign in', featured: true },
   { name: 'Team', price: 'Custom', unit: '', features: ['Self-hosted or private cloud', 'SSO & audit logs', 'Dedicated support'], cta: 'Talk to us', featured: false },
 ];
 

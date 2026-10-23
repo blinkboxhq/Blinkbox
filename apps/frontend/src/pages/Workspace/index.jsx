@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Monitor, ArrowLeft } from 'lucide-react';
 import useWorkspaceStore from '../../store/workspaceStore';
@@ -103,6 +104,18 @@ export default function Workspace() {
   useEffect(() => {
     if (id && !isMobile) loadEngine(id);
   }, [id, loadEngine, isMobile]);
+
+  // Opened from a starter template: the graph is complete and already active,
+  // so the only thing left to discover is the Run button. Say so once, then
+  // drop the flag from the URL so a reload doesn't repeat it.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('firstRun') !== '1') return;
+    toast('Ready to go — press Run (⌘↵), then click the last node to see what it produced.', { duration: 12000 });
+    params.delete('firstRun');
+    const rest = params.toString();
+    navigate(`${location.pathname}${rest ? `?${rest}` : ''}`, { replace: true, state: location.state });
+  }, []);
 
   // Auto-save every 5 s. Reads live store state so it catches every kind of
   // change (node moves, config edits, edge changes, etc.) without needing

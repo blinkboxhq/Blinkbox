@@ -18,6 +18,7 @@ import HistoryPanel from './components/HistoryPanel';
 import AmbientBackground from '../../components/AmbientBackground';
 import EmptyState from './components/EmptyState';
 import CreateAutomationBox from './components/CreateAutomationBox';
+import { templatePayload } from './starterTemplates';
 import WorkflowPreview from './components/WorkflowPreview';
 import WorkspaceHeader from '../Workspace/components/WorkspaceHeader';
 import VaultManager from './components/VaultManager';
@@ -185,6 +186,7 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [creatingTemplateId, setCreatingTemplateId] = useState(null);
   const [systemError, setSystemError] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -304,6 +306,25 @@ export default function Dashboard() {
     setIsCreating(false);
   };
 
+  // Starter workflows: create the full graph, activate it so the first click in
+  // the workspace can be Run (drafts can't be triggered), then open it.
+  // Activation failing isn't fatal — the user can still press Activate.
+  const handleCreateFromTemplate = async (template) => {
+    if (isCreating || creatingTemplateId) return;
+    setCreatingTemplateId(template.id); setSystemError(null);
+    try {
+      const r = await api.post('/api/automation', templatePayload(template));
+      if (!r.data?.success) throw new Error(r.data?.message || 'Failed to create the starter workflow.');
+      const created = r.data.automation;
+      try { await api.post(`/api/automation/${created._id}/activate`); created.active = true; created.status = 'active'; }
+      catch (e) { console.warn('starter activate failed:', e?.response?.data?.message || e.message); }
+      setWorkflows([created, ...workflows]);
+      setIsModalOpen(false);
+      navigate(`/workspace/${created._id}?firstRun=1`);
+    } catch (e) { setSystemError(e?.response?.data?.message || e.message || 'Failed.'); }
+    setCreatingTemplateId(null);
+  };
+
   const handleDelete = async (id) => {
     try { await api.delete(`/api/automation/${id}`); setWorkflows(workflows.filter((w) => (w._id || w.id) !== id)); }
     catch { toast.error('Failed to delete workflow'); }
@@ -367,7 +388,7 @@ export default function Dashboard() {
 
       <AmbientBackground />
 
-      <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} isLoading={isCreating} />
+      <CreateAutomationBox isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreate={handleCreate} onCreateTemplate={handleCreateFromTemplate} isLoading={isCreating || !!creatingTemplateId} />
 
       <DashboardSidebar user={user} onLogout={handleLogout} activeTab={activeTab === 'buy-credits' ? 'usage' : activeTab} setActiveTab={setActiveTab} usage={billingUsage} />
 
@@ -515,7 +536,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <EmptyState onDeploy={() => setIsModalOpen(true)} isSearch={!!(search || statusFilter !== 'all')} />
+              <EmptyState onDeploy={() => setIsModalOpen(true)} onUseTemplate={handleCreateFromTemplate} onConnectMCP={() => setActiveTab('mcp')} creatingTemplateId={creatingTemplateId} isSearch={!!(search || statusFilter !== 'all')} />
 
             ) : viewMode === 'list' ? (
               /* ── LIST VIEW ── */

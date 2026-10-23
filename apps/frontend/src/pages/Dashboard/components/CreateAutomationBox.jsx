@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { X, Loader2, ArrowRight, Sparkles, Play } from 'lucide-react';
 import WorkflowPreview from './WorkflowPreview';
+import { STARTER_TEMPLATES } from '../starterTemplates';
 
 const NAME_MAX = 60;
 
-export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoading }) {
+export default function CreateAutomationBox({ isOpen, onClose, onCreate, onCreateTemplate, isLoading }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const nameRef = useRef(null);
@@ -57,6 +58,36 @@ export default function CreateAutomationBox({ isOpen, onClose, onCreate, isLoadi
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Starters: a working graph beats an empty canvas. */}
+        {onCreateTemplate && (
+          <div className="px-5 pt-5">
+            <label className="block text-[10px] font-semibold text-[var(--bb-text-dim)] uppercase tracking-widest mb-2">Start from a working one</label>
+            <div className="grid grid-cols-3 gap-2">
+              {STARTER_TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => !isLoading && onCreateTemplate(t)}
+                  disabled={isLoading}
+                  className="bb-glass text-left rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.06] disabled:opacity-40"
+                  title={t.tagline}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Play className="w-3 h-3 shrink-0" style={{ color: 'var(--bb-accent-hot)' }} />
+                    <span className="text-[11px] font-semibold text-[var(--bb-text-hi)] leading-tight">{t.name}</span>
+                  </div>
+                  <div className="text-[10px] text-[var(--bb-text-dim)]">No setup · press Run</div>
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 pt-4">
+              <div className="flex-1 h-px" style={{ background: 'var(--bb-border-subtle)' }} />
+              <span className="text-[10px] text-[var(--bb-text-dim)] uppercase tracking-widest">or blank</span>
+              <div className="flex-1 h-px" style={{ background: 'var(--bb-border-subtle)' }} />
+            </div>
+          </div>
+        )}
 
         {/* Live preview glance */}
         <div className="px-5 pt-5">

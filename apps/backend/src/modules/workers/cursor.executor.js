@@ -25,6 +25,21 @@ const RETRY_BASE_MS = 1000;
 const RETRY_MAX_ATTEMPTS = 10;
 const RETRY_MAX_DELAY_MS = 5 * 60 * 1000;
 const MAX_CURSORS_PER_EXECUTION = 500;
+const MAX_LOGGED_INPUT_CHARS = 16 * 1024;
+
+// log.input only feeds the History view and duplicates the upstream node's
+// output, so large inputs are stored as a preview instead of a second full copy.
+function capLoggedInput(input) {
+  if (input == null) return input;
+  let str;
+  try {
+    str = JSON.stringify(input);
+  } catch {
+    return { __truncated: true };
+  }
+  if (!str || str.length <= MAX_LOGGED_INPUT_CHARS) return input;
+  return { __truncated: true, size: str.length, preview: str.slice(0, 2000) };
+}
 
 // A data-flow edge feeds the standard input array (vs. agent slots: llm/memory/tools).
 // The merge node exposes numbered handles (input, input-1, input-2, …) so each parallel
@@ -67,9 +82,25 @@ function collectMergeBranches(dataFlowEdges, dynamicContext, config) {
 /**
  * Classify an error and generate a human-readable fix hint.
  */
+const EXPLICIT_ERROR_CATEGORIES = new Set([
+  "timeout", "network", "auth", "config", "rate_limit", "parse", "expression", "code", "resource", "quota",
+]);
+
 function classifyError(err, nodeType, config) {
   const msg = err.message || String(err);
   const lower = msg.toLowerCase();
+
+  // A node that knows why it failed says so; guessing from the message would
+  // misfile e.g. a command's stderr tail, and an "unknown" error is retried,
+  // which re-runs side effects. hardenNode keeps the original error as cause.
+  const explicit = err?.category ?? err?.cause?.category;
+  if (EXPLICIT_ERROR_CATEGORIES.has(explicit)) {
+    return {
+      category: explicit,
+      message: msg,
+      hint: err?.hint ?? err?.cause?.hint ?? "Check the node configuration and upstream data.",
+    };
+  }
 
   // Timeout errors
   if (lower.includes("timeout") || lower.includes("exceeded") || lower.includes("etimedout")) {
@@ -578,7 +609,7 @@ export async function processCursor({ executionId, cursorId }) {
             nodeType: node.type,
             status: "skipped",
             error: skipReason,
-            input: resolvedInput,
+            input: capLoggedInput(resolvedInput),
             duration,
           },
         },
@@ -618,7 +649,7 @@ export async function processCursor({ executionId, cursorId }) {
           log: {
             nodeType: node.type,
             status: "success",
-            input: resolvedInput,
+            input: capLoggedInput(resolvedInput),
             duration,
           },
         },
@@ -729,7 +760,7 @@ export async function processCursor({ executionId, cursorId }) {
               nodeType: node.type,
               status: "failed",
               error: executionError,
-              input: resolvedInput,
+              input: capLoggedInput(resolvedInput),
               errorCategory: category,
               hint,
               retriesExhausted: shouldRetry ? false : true,
@@ -784,6 +815,14 @@ export async function processCursor({ executionId, cursorId }) {
       const hasSkipped = latestExecution.cursors.some((c) => c.status === "skipped");
       latestExecution.status = hasFailed ? "failed" : hasSkipped ? "partial" : "executed";
       latestExecution.completedAt = new Date();
+
+      // Per-item payloads are only read when a cursor runs; failed ones keep
+      // theirs so retry can replay the same item.
+      for (const c of latestExecution.cursors) {
+        if (c.status === "failed") continue;
+        c._loopItemOverride = null;
+        c._branchItems = null;
+      }
 
       await emitExecutionEvent(latestExecution._id, {
         type: "execution_completed",
@@ -875,8 +914,10 @@ export function isFailureEdge(edge) {
   return edge.type === "onFailure" || FAILURE_HANDLES.has(edge.sourceHandle);
 }
 
+// Saved nodes carry their config flattened onto node.data; the nested
+// node.data.config shape only survives on older automations.
 function splitOutputsOn(node) {
-  return !!node?.data?.config?.splitOutputs;
+  return !!(node?.data?.config?.splitOutputs ?? node?.data?.splitOutputs);
 }
 
 function hasFailureBranch(automation, nodeId) {

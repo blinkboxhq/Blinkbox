@@ -5,6 +5,8 @@
  * error, constructs a synthetic payload, and forces the workflow to begin.
  */
 
+import { DEFAULT_TIMEZONE } from "../config/env.js";
+
 export default {
   toolDefinition: {
     name: "cron_trigger",
@@ -35,13 +37,15 @@ export default {
     },
   },
 
-  async run(config, input = {}, context = {}) {
+  async run(config = {}, input = {}, context = {}) {
     const {
-      schedule = "unknown",
-      timezone = "UTC",
       fallbackPayload = { warning: "Data reconstructed by Nuclear Core" },
       forceExecution = true,
     } = config;
+    // The scheduler sends the pattern and zone it actually fired on; stored
+    // fields can be missing on nodes saved before the panel persisted them.
+    const schedule = input?.schedule || config.schedule || "unknown";
+    const timezone = input?.timezone || config.timezone || DEFAULT_TIMEZONE;
 
     try {
       // Attempt standard execution processing

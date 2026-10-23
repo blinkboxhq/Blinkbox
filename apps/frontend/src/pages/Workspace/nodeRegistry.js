@@ -134,6 +134,7 @@ import {
   Wrench,
   Monitor,
   Braces,
+  FileCode2,
 } from "lucide-react";
 
 // Local asset icons
@@ -327,6 +328,10 @@ import ResendNode from "@nodes/resend/ConfigPanel.jsx";
 import GitHubIssueTriggerNode from "@triggers/github_issue/ConfigPanel.jsx";
 import SshTriggerNode from "@triggers/ssh/ConfigPanel.jsx";
 import SshNode from "@nodes/ssh/ConfigPanel.jsx";
+import ComputerCommandNode from "@nodes/computer_command/ConfigPanel.jsx";
+import ComputerScriptNode from "@nodes/computer_script/ConfigPanel.jsx";
+import ComputerFilesNode from "@nodes/computer_files/ConfigPanel.jsx";
+import ComputerInfoNode from "@nodes/computer_info/ConfigPanel.jsx";
 import DockerTriggerNode from "@triggers/docker/ConfigPanel.jsx";
 import JiraTriggerNode from "@triggers/jira/ConfigPanel.jsx";
 import TrelloTriggerNode from "@triggers/trello/ConfigPanel.jsx";
@@ -2419,6 +2424,42 @@ export const NodeRegistry = {
     ConfigPanel: SshNode,
     category: "infra",
     description: "Run a command on a remote server via SSH and capture output",
+  },
+  computer_command: {
+    label: "Run Command",
+    icon: Terminal,
+    colorClass: "text-white",
+    accentColor: "161,161,170",
+    ConfigPanel: ComputerCommandNode,
+    category: "infra",
+    description: "Run a terminal command on your Linux computer and capture its output",
+  },
+  computer_script: {
+    label: "Run Script",
+    icon: FileCode2,
+    colorClass: "text-white",
+    accentColor: "161,161,170",
+    ConfigPanel: ComputerScriptNode,
+    category: "infra",
+    description: "Run a Python, Bash or Node script on your Linux computer",
+  },
+  computer_files: {
+    label: "Computer Files",
+    icon: FolderOpen,
+    colorClass: "text-white",
+    accentColor: "161,161,170",
+    ConfigPanel: ComputerFilesNode,
+    category: "infra",
+    description: "Read, write, list or delete files on your Linux computer",
+  },
+  computer_info: {
+    label: "Computer Info",
+    icon: Cpu,
+    colorClass: "text-white",
+    accentColor: "161,161,170",
+    ConfigPanel: ComputerInfoNode,
+    category: "infra",
+    description: "Check your Linux computer's CPU, memory, disk and uptime",
   },
   // Content / Feed
   youtube: {

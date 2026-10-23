@@ -4,6 +4,7 @@ import { JWT_SECRET } from "../config/env.js";
 import Execution from "../models/execution.model.js";
 import Automation from "../models/automation.model.js";
 import { initVCSocket } from "../nodes/VirtualComputer.js";
+import { containsInternals, SAFE_INTERNAL_MESSAGE } from "../utils/redactInternals.js";
 
 let io = null;
 
@@ -193,19 +194,34 @@ export function getIO() {
   return io;
 }
 
+const ERROR_FIELDS = ["error", "errorMessage", "message", "reason"];
+
+// Only error-ish fields are checked so node outputs are not re-serialized per emit.
+function redactErrorFields(data) {
+  if (!data || typeof data !== "object") return data;
+  let out = data;
+  for (const key of ERROR_FIELDS) {
+    if (typeof data[key] === "string" && containsInternals(data[key], false)) {
+      if (out === data) out = { ...data };
+      out[key] = SAFE_INTERNAL_MESSAGE;
+    }
+  }
+  return out;
+}
+
 export function emitExecutionUpdate(executionId, data) {
   if (!io) return;
-  io.to(`execution:${executionId}`).emit("execution:update", data);
+  io.to(`execution:${executionId}`).emit("execution:update", redactErrorFields(data));
 }
 
 export function emitNodeStatus(automationId, data) {
   if (!io) return;
-  io.to(`automation:${automationId}`).emit("node:status", data);
+  io.to(`automation:${automationId}`).emit("node:status", redactErrorFields(data));
 }
 
 export function emitToUser(userId, event, data) {
   if (!io) return;
-  io.to(`user:${userId}`).emit(event, data);
+  io.to(`user:${userId}`).emit(event, redactErrorFields(data));
 }
 
 // Broadcast to everyone in a collab room (used after saves to sync the graph)

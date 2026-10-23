@@ -50,6 +50,7 @@ export const NODE_TYPES = [
   // Agent / Computer
   "virtual_computer", "coding_agent",
   "claude_code", "codex", "gemini_cli", "ollama", "lm_studio", "github_copilot",
+  "computer_command", "computer_script", "computer_files", "computer_info",
   // Flow Control
   "wait_for_event", "sub_workflow",
   // Backward-compat aliases

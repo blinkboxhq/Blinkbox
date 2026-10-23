@@ -8,6 +8,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 process.env.JWT_SECRET = "test-jwt-secret";
 process.env.ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef";
+process.env.ALLOW_SIGNUPS = "false";
 
 const redis = new RedisMock();
 const googlePayload = { current: null };
@@ -34,7 +35,7 @@ mock.module("google-auth-library", {
   },
 });
 
-const { login, loginTwoFactor, forgotPassword, googleLogin } = await import("./auth.controller.js");
+const { login, loginTwoFactor, forgotPassword, googleLogin, register } = await import("./auth.controller.js");
 const { default: User } = await import("../../models/user.model.js");
 const { encrypt } = await import("../../utils/crypto.js");
 const { generateSecret } = await import("../../utils/totp.js");
@@ -161,4 +162,40 @@ test("Google SSO rejects mismatched googleId on an existing account", async () =
   await googleLogin(mkReq({ credential: "fake-jwt" }), ok);
   assert.equal(ok.statusCode, 200);
   assert.ok(ok.body.token);
+});
+
+test("register is closed: 403 and no user is created", async () => {
+  const res = mkRes();
+  await register(mkReq({ name: "New", email: "fresh@test.dev", password: "correct-horse" }), res);
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.message, "Sign-ups are closed on this instance.");
+  assert.equal(res.body.token, undefined, "no session may be minted");
+  assert.equal(await User.countDocuments({ email: "fresh@test.dev" }), 0);
+});
+
+test("Google SSO refuses an unknown email while sign-ups are closed", async () => {
+  googlePayload.current = { sub: "google-id-new", email: "stranger@test.dev", name: "S" };
+  const res = mkRes();
+  await googleLogin(mkReq({ credential: "fake-jwt" }), res);
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.message, "Sign-ups are closed on this instance.");
+  assert.equal(res.body.token, undefined, "no session may be minted");
+  assert.equal(await User.countDocuments({ email: "stranger@test.dev" }), 0);
+});
+
+test("login admits an unverified account inside the 7-day grace window, then walls it", async () => {
+  await makeUser("grace@test.dev", { emailVerified: false });
+  const ok = mkRes();
+  await login(mkReq({ email: "grace@test.dev", password: "correct-horse" }), ok);
+  assert.equal(ok.statusCode, 200);
+  assert.ok(ok.body.token);
+  assert.equal(ok.body.emailVerified, false);
+
+  const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+  // createdAt is immutable through Mongoose once timestamps are on; age the row via the driver.
+  await User.collection.updateOne({ email: "grace@test.dev" }, { $set: { createdAt: eightDaysAgo } });
+  const walled = mkRes();
+  await login(mkReq({ email: "grace@test.dev", password: "correct-horse" }), walled);
+  assert.equal(walled.statusCode, 403);
+  assert.equal(walled.body.needsVerification, true);
 });

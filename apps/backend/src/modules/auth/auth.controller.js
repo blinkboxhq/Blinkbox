@@ -4,7 +4,7 @@ import crypto from "crypto";
 import User from "../../models/user.model.js";
 import { redis } from "../../infra/redis.client.js";
 import axios from "axios";
-import { JWT_SECRET, SELF_HOSTED } from "../../config/env.js";
+import { JWT_SECRET, SELF_HOSTED, ALLOW_SIGNUPS } from "../../config/env.js";
 import { OAuth2Client } from "google-auth-library";
 import { decrypt } from "../../utils/crypto.js";
 import { verifyToken as verifyTotp } from "../../utils/totp.js";
@@ -20,6 +20,13 @@ import {
 const RESET_TTL  = 60 * 15;      // 15 minutes
 const VERIFY_TTL = 60 * 60 * 24; // 24 hours
 const TWO_FA_TTL = 60 * 5;       // 5 minutes to complete the 2FA step
+// A fresh account may use the app before its address is verified. Verification
+// mail is best-effort (email.service.js never throws), so hard-gating login on it
+// silently locks out every signup whose mail was late, filtered, or never sent.
+// After the grace window the wall comes back, so an unverified address can't
+// keep an account indefinitely.
+const UNVERIFIED_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+const withinUnverifiedGrace = (user) => Date.now() - new Date(user.createdAt).getTime() < UNVERIFIED_GRACE_MS;
 
 const APP_URL = process.env.VITE_APP_URL || "https://blinkbox.net";
 
@@ -216,6 +223,9 @@ export async function googleLogin(req, res) {
     let isNewUser = false;
 
     if (!user) {
+      if (!ALLOW_SIGNUPS) {
+        return res.status(403).json({ message: "Sign-ups are closed on this instance." });
+      }
       user = await User.create({
         name: safeName,
         email,
@@ -271,6 +281,9 @@ export async function register(req, res) {
     if (SELF_HOSTED) {
       return res.status(403).json({ message: "Sign-up is disabled on this instance." });
     }
+    if (!ALLOW_SIGNUPS) {
+      return res.status(403).json({ message: "Sign-ups are closed on this instance." });
+    }
 
     const { name, email, password } = req.body;
 
@@ -305,10 +318,15 @@ export async function register(req, res) {
     const verifyUrl = `${APP_URL}/verify-email?token=${verifyToken}`;
     await sendRegistrationEmail(user, verifyUrl);
 
+    // Sign the user in straight away; the verification mail is already on its
+    // way and the grace window in `login` keeps the account usable meanwhile.
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "24h" });
+
     res.status(201).json({
-      needsVerification: true,
-      email: user.email,
-      message: "Account created. Please check your email to verify your account.",
+      message: "Account created. We've sent a verification link to your email.",
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      emailVerified: false,
     });
   } catch (error) {
     console.error("Registration Error:", error.message);
@@ -492,7 +510,7 @@ export async function login(req, res) {
       return res.status(401).json({ message: "Invalid email or password.", lockoutTimer: 15 });
     }
 
-    if (!user.emailVerified) {
+    if (!user.emailVerified && !withinUnverifiedGrace(user)) {
       return res.status(403).json({
         needsVerification: true,
         email: user.email,
@@ -519,6 +537,7 @@ export async function login(req, res) {
       message: "Authentication successful.",
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      emailVerified: user.emailVerified,
     });
   } catch (error) {
     console.error("Login Error:", error.message);

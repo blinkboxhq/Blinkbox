@@ -1172,6 +1172,47 @@ export const NODE_KB = {
       { k: "credentialId", t: "credential", r: true, ex: "", d: "SSH credential (host, user, key)" },
     ],
   },
+  computer_command: {
+    label: "Run Command",
+    out: ["success", "exitCode", "output", "stdout", "stderr", "durationMs", "timedOut", "json"],
+    fields: [
+      { k: "command", t: "string", r: true, ex: "df -h / | tail -1", d: "Shell command run with bash on the Blinkbox Linux computer, inside /workspace" },
+      { k: "cwd", t: "string", r: false, ex: "reports", d: "Working folder relative to /workspace" },
+      { k: "env", t: "array", r: false, ex: [{ key: "NAME", value: "{{$json.name}}" }], d: "Environment variables as key/value pairs" },
+      { k: "stdin", t: "string", r: false, ex: "{{$json.csv}}", d: "Text piped to the command's stdin" },
+      { k: "timeoutSeconds", t: "number", r: false, ex: 60, d: "Kill after this many seconds (max 300)" },
+      { k: "failOnError", t: "boolean", r: false, ex: true, d: "Stop the run on a non-zero exit code; off returns success false instead" },
+      { k: "parseJson", t: "boolean", r: false, ex: false, d: "Parse stdout as JSON into json" },
+    ],
+  },
+  computer_script: {
+    label: "Run Script",
+    out: ["success", "exitCode", "output", "stdout", "stderr", "durationMs", "timedOut", "json", "language"],
+    fields: [
+      { k: "language", t: "select", r: true, ex: "python", d: "python | bash | node" },
+      { k: "code", t: "code", r: true, ex: "import json\nprint(json.dumps({'ok': True}))", d: "Script source run on the Blinkbox Linux computer" },
+      { k: "args", t: "array", r: false, ex: ["{{$json.id}}"], d: "Command-line arguments" },
+      { k: "timeoutSeconds", t: "number", r: false, ex: 60, d: "Kill after this many seconds (max 300)" },
+      { k: "failOnError", t: "boolean", r: false, ex: true, d: "Stop the run on a non-zero exit code" },
+      { k: "parseJson", t: "boolean", r: false, ex: true, d: "Parse stdout as JSON into json" },
+    ],
+  },
+  computer_files: {
+    label: "Computer Files",
+    out: ["success", "operation", "path", "content", "bytesWritten", "entries", "count", "deleted"],
+    fields: [
+      { k: "operation", t: "select", r: true, ex: "write", d: "read | write | append | list | delete" },
+      { k: "path", t: "string", r: true, ex: "reports/today.txt", d: "Path relative to /workspace (optional for list)" },
+      { k: "content", t: "string", r: false, ex: "{{$json.output}}", d: "Text to write or append" },
+      { k: "encoding", t: "select", r: false, ex: "utf8", d: "utf8 | base64" },
+      { k: "recursive", t: "boolean", r: false, ex: false, d: "Recurse for list, or delete a folder" },
+    ],
+  },
+  computer_info: {
+    label: "Computer Info",
+    out: ["success", "hostname", "uptimeSec", "memory", "disk"],
+    fields: [],
+  },
   ssl_check: {
     label: "SSL Certificate Check",
     out: ["valid", "daysUntilExpiry", "expired", "expiringSoon", "issuer", "validTo"],

@@ -954,11 +954,22 @@ export const TOOLS = [
         );
       }
 
-      const hasBody = method !== "GET" && args.body && typeof args.body === "object";
+      // Some MCP clients hand nested arguments over as a JSON string rather
+      // than an object. Dropping those silently sent an empty body to the API
+      // and every write came back as a bare "Validation failed" — parse instead.
+      let body = args.body;
+      if (typeof body === "string" && body.trim()) {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          throw new Error("body must be a JSON object (it was a string that isn't valid JSON).");
+        }
+      }
+      const hasBody = method !== "GET" && body && typeof body === "object";
       const res = await api.request({
         method,
         url: path,
-        data: hasBody ? args.body : undefined,
+        data: hasBody ? body : undefined,
       });
       const data = pick(res);
       const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);

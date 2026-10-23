@@ -150,7 +150,7 @@ export default function Vision() {
                 to="/login"
                 className="bb-btn bb-btn-primary group flex items-center gap-2 px-6 py-3 text-[14px] font-semibold"
               >
-                Start building free
+                Sign in
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
               </Link>
               <Link to="/login" className="bb-btn bb-btn-ghost px-6 py-3 text-[14px] font-medium">

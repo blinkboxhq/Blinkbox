@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyToken } from "../auth/auth.middleware.js";
 import Automation from "../../models/automation.model.js";
-import AutomationVersion from "../../models/automationVersion.model.js";
+import AutomationVersion, { MAX_VERSIONS } from "../../models/automationVersion.model.js";
 
 const router = Router({ mergeParams: true });
 
@@ -16,7 +16,7 @@ router.get("/", verifyToken, async (req, res) => {
 
     const versions = await AutomationVersion.find({ automationId: req.params.id })
       .sort({ version: -1 })
-      .limit(50)
+      .limit(MAX_VERSIONS)
       .lean();
 
     res.json({ success: true, versions });
@@ -56,7 +56,7 @@ router.post("/:versionId/restore", verifyToken, async (req, res) => {
 });
 
 // Edits arrive far faster than they are worth versioning — a user dragging
-// nodes produces a save every few seconds. Without coalescing, the 50-version
+// nodes produces a save every few seconds. Without coalescing, the version
 // cap holds only a couple of minutes of history and the real restore point the
 // user wants has already been pruned away.
 const SNAPSHOT_COALESCE_MS = 2 * 60 * 1000;
@@ -78,12 +78,12 @@ export async function snapshotBeforeSave(automation, workspaceId) {
 
     const nextVersion = (lastVersion?.version ?? 0) + 1;
 
-    // Cap at 50 versions — prune oldest if needed
+    // Prune before create so a full cluster still frees room for the new snapshot
     const count = await AutomationVersion.countDocuments({ automationId: automation._id });
-    if (count >= 50) {
+    if (count >= MAX_VERSIONS) {
       const oldest = await AutomationVersion.find({ automationId: automation._id })
         .sort({ version: 1 })
-        .limit(count - 49)
+        .limit(count - MAX_VERSIONS + 1)
         .select("_id")
         .lean();
       await AutomationVersion.deleteMany({ _id: { $in: oldest.map((v) => v._id) } });

@@ -247,6 +247,16 @@ export const DEFAULT_SCHEMAS = {
   mongodb:    { documents: "array", count: "number", document: "object", found: "boolean", insertedId: "string", insertedCount: "number", modifiedCount: "number", deletedCount: "number", collection: "string" },
   redis_node: { value: "any", raw: "string", items: "array", members: "array", hash: "object", keys: "array", found: "boolean", set: "boolean", key: "string", length: "number" },
   firebase:   { document: "object", documents: "array", count: "number", docId: "string", found: "boolean", user: "object", uid: "string", messageId: "string", collection: "string" },
+
+  // Your Linux computer
+  computer_command: { success: "boolean", exitCode: "number", output: "string", stdout: "string", stderr: "string", durationMs: "number", timedOut: "boolean", truncated: "boolean", json: "any", error: "string" },
+  computer_script:  { success: "boolean", exitCode: "number", output: "string", stdout: "string", stderr: "string", durationMs: "number", timedOut: "boolean", truncated: "boolean", json: "any", language: "string", error: "string" },
+  computer_files:   { success: "boolean", operation: "string", path: "string", content: "string", encoding: "string", sizeBytes: "number", truncated: "boolean", bytesWritten: "number", entries: "array", count: "number", deleted: "boolean" },
+  computer_info:    {
+    success: "boolean", hostname: "string", platform: "string", arch: "string", release: "string", uptimeSec: "number", loadavg: "array", cpus: "number", cpuModel: "string",
+    memory: { totalBytes: "number", freeBytes: "number", usedBytes: "number", usedPercent: "number" },
+    disk: { path: "string", totalBytes: "number", freeBytes: "number", usedBytes: "number", usedPercent: "number" },
+  },
 };
 
 /**

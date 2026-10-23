@@ -232,7 +232,7 @@ function HeroSection({ heroRef, heroInView }) {
             <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="group">
               <button className="h-11 px-6 text-[14px] font-semibold rounded-lg transition-all duration-200 hover:bg-neutral-200 active:scale-[0.98] inline-flex items-center gap-1.5"
                 style={{ background: '#fff', color: '#000', boxShadow: '0 8px 24px rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.04)' }}>
-                Start for free
+                Sign in
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             </a>
@@ -337,7 +337,7 @@ function Header() {
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[13px] text-neutral-400 hover:text-white transition-colors duration-150 px-2">Log in</a>
           <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer">
             <button className="text-[13px] font-medium text-black bg-white hover:bg-neutral-200 transition-colors duration-150 px-3.5 py-1.5 rounded-lg">
-              Sign up
+              Sign in
             </button>
           </a>
         </div>
@@ -360,7 +360,7 @@ function Header() {
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.06]">
               <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer" className="text-[15px] text-neutral-500">Log in</a>
-              <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer"><Button className="w-full rounded-full">Sign up</Button></a>
+              <a href="https://blinkbox.net/login" target="_blank" rel="noopener noreferrer"><Button className="w-full rounded-full">Sign in</Button></a>
             </div>
           </motion.div>
         )}
@@ -779,7 +779,7 @@ const PLANS = [
     period: 'forever',
     desc: 'For solo builders and side projects.',
     features: ['5,000 executions / mo', '10 active workflows', '50+ integrations', 'Community support'],
-    cta: 'Get started free',
+    cta: 'Sign in',
     href: 'https://blinkbox.net/login',
     highlight: false,
   },
@@ -789,7 +789,7 @@ const PLANS = [
     period: '/ month',
     desc: 'For teams serious about automation.',
     features: ['Unlimited executions', 'Unlimited workflows', '250+ integrations', 'AI agent builder', 'Headless scraping', 'Priority support'],
-    cta: 'Start Pro',
+    cta: 'Sign in',
     href: 'https://blinkbox.net/login',
     highlight: true,
   },
